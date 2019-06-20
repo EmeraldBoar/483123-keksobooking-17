@@ -1,10 +1,15 @@
 'use strict';
 var ARR_TYPE = ['palace', 'flat', 'house', 'bungalo'];
-var numAds = 8;
+var NUM_ADS = 8;
+var MAIN_PIN_WIDTH = 62;
+var MAIN_PIN_HEIGHT = 62;
 
 var map = document.querySelector('.map');
-map.classList.remove('map--faded');
-
+var mapMainPin = document.querySelector('.map__pin--main');
+var adForm = document.querySelector('.ad-form');
+var fieldsetForm = document.querySelectorAll('fieldset');
+var selectForm = document.querySelectorAll('select');
+var address = adForm.querySelector('#address');
 var similarListElement = map.querySelector('.map__pins');
 var similarPinsTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
 
@@ -18,7 +23,7 @@ var getRandomNum = function (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 };
 
-// Создание массива чисел от 1 до numAds с рандомным порядком
+// Создание массива чисел от 1 до NUM_ADS с рандомным порядком
 var getShuffleArr = function (num) {
   var arr = [];
   for (var i = 0; i < num; i += 1) {
@@ -39,7 +44,7 @@ var getShuffleArr = function (num) {
 };
 
 // Функция создает массив с объектами
-var shuffleArr = getShuffleArr(numAds);
+var shuffleArr = getShuffleArr(NUM_ADS);
 var createAds = function (num) {
   var similarAds = [];
   for (var i = 0; i < num; i += 1) {
@@ -68,9 +73,50 @@ var renderPin = function (pin) {
   return pinElement;
 };
 
-var fragment = document.createDocumentFragment();
-for (var i = 0; i < createAds(numAds).length; i++) {
-  fragment.appendChild(renderPin(createAds(numAds)[i]));
-}
 
-similarListElement.appendChild(fragment);
+// Добавляет элементы в DOM дерево
+var addingPins = function () {
+  var fragment = document.createDocumentFragment();
+  for (var i = 0; i < createAds(NUM_ADS).length; i++) {
+    fragment.appendChild(renderPin(createAds(NUM_ADS)[i]));
+  }
+  similarListElement.appendChild(fragment);
+};
+
+var formDisabled = function (collection) {
+  for (var i = 0; i < collection.length; i += 1) {
+    collection[i].setAttribute('disabled', 'disabled');
+  }
+};
+
+var formEnable = function (collection) {
+  for (var i = 0; i < collection.length; i += 1) {
+    collection[i].removeAttribute('disabled');
+  }
+};
+
+formDisabled(fieldsetForm);
+formDisabled(selectForm);
+
+// Функция переводит строку в число
+var getParseCoordinates = function (str) {
+  return parseInt(str, 10);
+};
+
+// Функция вносит координаты указателя в input #address
+var getRenderAddress = function () {
+  address.value = (getParseCoordinates(mapMainPin.style.left) + MAIN_PIN_WIDTH / 2) + ',' + ' ' + (getParseCoordinates(mapMainPin.style.top) + MAIN_PIN_HEIGHT + 22);
+};
+
+// Функция активации страницы
+var activatePage = function () {
+  map.classList.remove('map--faded');
+  adForm.classList.remove('ad-form--disabled');
+  formEnable(fieldsetForm);
+  formEnable(selectForm);
+  addingPins();
+  getRenderAddress();
+};
+
+
+mapMainPin.addEventListener('click', activatePage);
