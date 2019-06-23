@@ -1,17 +1,42 @@
 'use strict';
-var ARR_TYPE = ['palace', 'flat', 'house', 'bungalo'];
+var ARR_ACCOMMODATION = [
+  {
+    type: 'bungalo',
+    minPrice: '0'
+  },
+  {
+    type: 'flat',
+    minPrice: '1000'
+  },
+  {
+    type: 'house',
+    minPrice: '5000'
+  },
+  {
+    type: 'palace',
+    minPrice: '10000'
+  }
+];
 var NUM_ADS = 8;
 var MAIN_PIN_WIDTH = 62;
 var MAIN_PIN_HEIGHT = 62;
 
+// Карта
 var map = document.querySelector('.map');
 var mapMainPin = document.querySelector('.map__pin--main');
+var similarListElement = map.querySelector('.map__pins');
+var similarPinsTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+
+// Форма
 var adForm = document.querySelector('.ad-form');
 var fieldsetForm = document.querySelectorAll('fieldset');
 var selectForm = document.querySelectorAll('select');
+var selectTimeIn = document.querySelector('select[name=timein]');
+var selectTimeOut = document.querySelector('select[name=timeout]');
+var selectAccommodationType = adForm.querySelector('select[name=type]');
+var inputAccommodationPrice = adForm.querySelector('input[name=price]');
 var address = adForm.querySelector('#address');
-var similarListElement = map.querySelector('.map__pins');
-var similarPinsTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+
 
 // Рандомное число от 0 до длины массива
 var getRandomArr = function (arr) {
@@ -53,7 +78,7 @@ var createAds = function (num) {
         'avatar': 'img/avatars/user0' + shuffleArr[i] + '.png'
       },
       'offer': {
-        'type': ARR_TYPE[getRandomArr(ARR_TYPE)]
+        'type': ARR_ACCOMMODATION[getRandomArr(ARR_ACCOMMODATION)].type
       },
       'location': {
         'x': getRandomNum(0, 1200),
@@ -116,7 +141,29 @@ var activatePage = function () {
   formEnable(selectForm);
   addingPins();
   getRenderAddress();
+  mapMainPin.removeEventListener('click', activatePage);
 };
 
+// Синхронизация времени прибытия/выезда
+var setTimeIn = function () {
+  selectTimeOut.selectedIndex = selectTimeIn.selectedIndex;
+};
+
+var setTimeOut = function () {
+  selectTimeIn.selectedIndex = selectTimeOut.selectedIndex;
+};
+
+// Изменение цены от выбранного жилья
+var getChangePrice = function () {
+  for (var i = 0; i < selectAccommodationType.length; i += 1) {
+    if (ARR_ACCOMMODATION[i].type === selectAccommodationType.value) {
+      inputAccommodationPrice.placeholder = ARR_ACCOMMODATION[i].minPrice;
+      inputAccommodationPrice.min = ARR_ACCOMMODATION[i].minPrice;
+    }
+  }
+};
 
 mapMainPin.addEventListener('click', activatePage);
+selectAccommodationType.addEventListener('change', getChangePrice);
+selectTimeOut.addEventListener('change', setTimeOut);
+selectTimeIn.addEventListener('change', setTimeIn);
