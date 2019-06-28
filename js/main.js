@@ -18,14 +18,19 @@ var ARR_ACCOMMODATION = [
   }
 ];
 var NUM_ADS = 8;
+var PIN_HEIGHT = 70;
 var MAIN_PIN_WIDTH = 62;
 var MAIN_PIN_HEIGHT = 62;
+var MAP_HEIGHT = 630;
+var MAP_PADDING = 130;
 
 // Карта
 var map = document.querySelector('.map');
+var mapWidth = map.clientWidth;
 var mapMainPin = document.querySelector('.map__pin--main');
 var similarListElement = map.querySelector('.map__pins');
 var similarPinsTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+var isPageActive = false;
 
 // Форма
 var adForm = document.querySelector('.ad-form');
@@ -81,8 +86,8 @@ var createAds = function (num) {
         'type': ARR_ACCOMMODATION[getRandomArr(ARR_ACCOMMODATION)].type
       },
       'location': {
-        'x': getRandomNum(0, 1200),
-        'y': getRandomNum(130, 630)
+        'x': getRandomNum(0, mapWidth),
+        'y': getRandomNum(MAP_PADDING, MAP_HEIGHT)
       }
     };
   }
@@ -107,6 +112,7 @@ var addingPins = function () {
   }
   similarListElement.appendChild(fragment);
 };
+
 
 var formDisabled = function (collection) {
   for (var i = 0; i < collection.length; i += 1) {
@@ -135,14 +141,20 @@ var getRenderAddress = function () {
 
 // Функция активации страницы
 var activatePage = function () {
-  map.classList.remove('map--faded');
-  adForm.classList.remove('ad-form--disabled');
-  formEnable(fieldsetForm);
-  formEnable(selectForm);
-  addingPins();
-  getRenderAddress();
-  mapMainPin.removeEventListener('click', activatePage);
+  if (!isPageActive) {
+    map.classList.remove('map--faded');
+    adForm.classList.remove('ad-form--disabled');
+    formEnable(fieldsetForm);
+    formEnable(selectForm);
+
+    isPageActive = true;
+    addingPins();
+    getRenderAddress();
+  }
 };
+
+// Значения поля адрес при неактивной странице
+getRenderAddress();
 
 // Синхронизация времени прибытия/выезда
 var setTimeIn = function () {
@@ -163,7 +175,62 @@ var getChangePrice = function () {
   }
 };
 
-mapMainPin.addEventListener('click', activatePage);
+mapMainPin.addEventListener('mousedown', function (evt) {
+  activatePage();
+
+  var startCoords = {
+    x: evt.clientX,
+    y: evt.clientY
+  };
+
+  var onMouseMove = function (moveEvt) {
+    moveEvt.preventDefault();
+
+    var shift = {
+      x: startCoords.x - moveEvt.clientX,
+      y: startCoords.y - moveEvt.clientY
+    };
+
+    startCoords = {
+      x: moveEvt.clientX,
+      y: moveEvt.clientY
+    };
+
+    var mapMainPinY = (mapMainPin.offsetTop - shift.y);
+    var mapMainPinX = (mapMainPin.offsetLeft - shift.x);
+
+    if (mapMainPinY < MAP_PADDING - PIN_HEIGHT) {
+      mapMainPinY = MAP_PADDING - PIN_HEIGHT;
+    } else if (mapMainPinY > MAP_HEIGHT) {
+      mapMainPinY = MAP_HEIGHT;
+    }
+
+    if (mapMainPinX < -MAIN_PIN_WIDTH / 2) {
+      mapMainPinX = -MAIN_PIN_WIDTH / 2;
+    } else if (mapMainPinX > (mapWidth - MAIN_PIN_WIDTH / 2)) {
+      mapMainPinX = mapWidth - MAIN_PIN_WIDTH / 2;
+    }
+
+    mapMainPin.style.top = mapMainPinY + 'px';
+    mapMainPin.style.left = mapMainPinX + 'px';
+
+    getRenderAddress();
+  };
+
+  var onMouseUp = function (upEvt) {
+    upEvt.preventDefault();
+
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+
+    getRenderAddress();
+  };
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
+
+
 selectAccommodationType.addEventListener('change', getChangePrice);
 selectTimeOut.addEventListener('change', setTimeOut);
 selectTimeIn.addEventListener('change', setTimeIn);
