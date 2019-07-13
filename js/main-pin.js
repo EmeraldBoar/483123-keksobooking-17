@@ -54,7 +54,7 @@
       formEnable(fieldsetForm);
       formEnable(selectForm);
       isPageActive = true;
-      window.addingPins();
+      window.date.getSimilarPosters();
       getRenderAddress();
     }
   };
