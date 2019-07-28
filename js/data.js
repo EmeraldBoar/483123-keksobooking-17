@@ -2,10 +2,11 @@
 
 (function () {
 
+  var PINS_TOTAL = 5;
   var map = document.querySelector('.map');
 
+
   // Отрисовка указателей
-  var similarListElement = map.querySelector('.map__pins');
   var similarPinsTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
 
   var renderPin = function (pin) {
@@ -19,14 +20,51 @@
 
   // Добавляет элементы в DOM дерево
   var addingPins = function (similarPosters) {
+    var similarListElement = map.querySelector('.map__pins');
     var fragment = document.createDocumentFragment();
-    for (var i = 0; i < similarPosters.length; i += 1) {
-      var similarPoster = similarPosters[i];
+    var renderedPins = similarListElement.querySelectorAll('.map__pin:not(.map__pin--main)');
+
+    for (var i = 0; i < renderedPins.length; i++) {
+      similarListElement.removeChild(renderedPins[i]);
+    }
+
+    for (var j = 0; j < similarPosters.length; j += 1) {
+      var similarPoster = similarPosters[j];
       var posterCard = renderPin(similarPoster);
       fragment.appendChild(posterCard);
     }
     similarListElement.appendChild(fragment);
   };
+
+
+  var filterForm = document.querySelector('.map__filters');
+  var posters = [];
+
+  var filterPosters = function () {
+    var filteredPosters = posters.slice();
+    var typeSelect = filterForm.querySelector('#housing-type');
+
+    if (typeSelect.value !== 'any') {
+      filteredPosters = filteredPosters
+        .filter(function (poster) {
+          return poster.offer.type === typeSelect.value;
+        });
+    }
+    filteredPosters = filteredPosters.slice(0, PINS_TOTAL);
+    addingPins(filteredPosters);
+  };
+
+  var filterInputs = filterForm.querySelectorAll('select');
+
+  for (var i = 0; i < filterInputs.length; i++) {
+    filterInputs[i].addEventListener('change', filterPosters);
+  }
+
+  var loadPosters = function (similarPosters) {
+    posters = similarPosters;
+    filterPosters();
+  };
+
 
   var getSimilarPosters = function () {
 
@@ -46,7 +84,7 @@
       });
     };
 
-    window.load('https://js.dump.academy/keksobooking/data', addingPins, onError);
+    window.load('https://js.dump.academy/keksobooking/data', loadPosters, onError);
   };
 
   window.date = {
