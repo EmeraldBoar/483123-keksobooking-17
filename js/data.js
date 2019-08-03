@@ -38,30 +38,6 @@
     similarListElement.appendChild(fragment);
   };
 
-  // При клике на пин показывает карточку объявления
-  var onMapPinClick = function (pin, poster) {
-    pin.addEventListener('click', function () {
-      var pins = document.querySelectorAll('.map__pin:not(.map__pin--main)');
-
-      for (var i = 0; i < pins.length; i++) {
-        pins[i].classList.remove('map__pin--active');
-      }
-
-      this.classList.add('map__pin--active');
-      hidePosterCard();
-      renderPosterCard(poster);
-    });
-  };
-
-  // Удаление карточки
-  var hidePosterCard = function () {
-    var posterCard = map.querySelector('.map__card');
-
-    if (posterCard) {
-      map.removeChild(posterCard);
-    }
-  };
-
 
   var filterForm = document.querySelector('.map__filters');
   var posters = [];
@@ -144,7 +120,13 @@
     };
 
     fillPosterCard('.popup__type', offerType[similarPoster.offer.type]);
-    fillPosterCard('.popup__text--capacity', similarPoster.offer.rooms + ' комнаты для ' + similarPoster.offer.guests + ' гостей');
+
+    if (!similarPoster.offer.rooms || !similarPoster.offer.guests) {
+      posterCard.querySelector('.popup__text--capacity').style.display = 'none';
+    } else {
+      fillPosterCard('.popup__text--capacity', similarPoster.offer.rooms + ' комнаты для ' + similarPoster.offer.guests + ' гостей');
+    }
+
     fillPosterCard('.popup__text--time', 'Заезд после ' + similarPoster.offer.checkin + ', выезд до ' + similarPoster.offer.checkout);
 
     var featuresList = posterCard.querySelector('.popup__features');
@@ -187,13 +169,49 @@
   // Отрисовка карточки похожего объявления
 
   var renderPosterCard = function (similarPoster) {
-    var mapCardsBlock = document.querySelector('.map');
-    var mapFilters = mapCardsBlock.querySelector('.map__filters-container');
+    var mapFilters = map.querySelector('.map__filters-container');
     var fragment = document.createDocumentFragment();
     var posterCard = createPosterCard(similarPoster);
 
     fragment.appendChild(posterCard);
-    mapCardsBlock.insertBefore(fragment, mapFilters);
+    map.insertBefore(fragment, mapFilters);
+
+    var cardClose = document.querySelector('.map__card .popup__close');
+    cardClose.addEventListener('click', hidePosterCard);
+
+    document.addEventListener('keydown', onPopupEscPress);
+  };
+
+  // При клике на пин показывает карточку объявления
+  var onMapPinClick = function (pin, poster) {
+    pin.addEventListener('click', function () {
+      var pins = document.querySelectorAll('.map__pin:not(.map__pin--main)');
+
+      for (var k = 0; k < pins.length; k++) {
+        pins[k].classList.remove('map__pin--active');
+      }
+
+      this.classList.add('map__pin--active');
+      hidePosterCard();
+      renderPosterCard(poster);
+    });
+  };
+
+  // Удаление карточки
+  var hidePosterCard = function () {
+    var posterCard = map.querySelector('.map__card');
+
+    if (posterCard) {
+      map.removeChild(posterCard);
+    }
+
+    document.removeEventListener('keydown', onPopupEscPress);
+  };
+
+  var onPopupEscPress = function (evt) {
+    if (evt.keyCode === 27) {
+      hidePosterCard();
+    }
   };
 
   window.date = {
