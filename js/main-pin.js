@@ -17,6 +17,7 @@
   var adForm = document.querySelector('.ad-form');
   var fieldsetForm = document.querySelectorAll('fieldset');
   var selectForm = document.querySelectorAll('select');
+  var filterForm = document.querySelector('.map__filters');
   var address = adForm.querySelector('#address');
 
 
@@ -56,6 +57,10 @@
       isPageActive = true;
       window.date.getSimilarPosters();
       getRenderAddress();
+
+      for (var j = 0; j < filterForm.children.length; j++) {
+        filterForm.children[j].removeAttribute('disabled');
+      }
     }
   };
 
