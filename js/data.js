@@ -1,3 +1,4 @@
+/* eslint-disable no-invalid-this */
 'use strict';
 
 (function () {
@@ -31,9 +32,34 @@
     for (var j = 0; j < similarPosters.length; j += 1) {
       var similarPoster = similarPosters[j];
       var posterCard = renderPin(similarPoster);
+      onMapPinClick(posterCard, similarPoster);
       fragment.appendChild(posterCard);
     }
     similarListElement.appendChild(fragment);
+  };
+
+  // При клике на пин показывает карточку объявления
+  var onMapPinClick = function (pin, poster) {
+    pin.addEventListener('click', function () {
+      var pins = document.querySelectorAll('.map__pin:not(.map__pin--main)');
+
+      for (var i = 0; i < pins.length; i++) {
+        pins[i].classList.remove('map__pin--active');
+      }
+
+      this.classList.add('map__pin--active');
+      hidePosterCard();
+      renderPosterCard(poster);
+    });
+  };
+
+  // Удаление карточки
+  var hidePosterCard = function () {
+    var posterCard = map.querySelector('.map__card');
+
+    if (posterCard) {
+      map.removeChild(posterCard);
+    }
   };
 
 
@@ -45,12 +71,12 @@
     var typeSelect = filterForm.querySelector('#housing-type');
 
     if (typeSelect.value !== 'any') {
-      filteredPosters = filteredPosters
-        .filter(function (poster) {
-          return poster.offer.type === typeSelect.value;
-        });
+      filteredPosters = filteredPosters.filter(function (poster) {
+        return poster.offer.type === typeSelect.value;
+      });
     }
     filteredPosters = filteredPosters.slice(0, PINS_TOTAL);
+    hidePosterCard();
     addingPins(filteredPosters);
   };
 
@@ -85,6 +111,89 @@
     };
 
     window.load('https://js.dump.academy/keksobooking/data', loadPosters, onError);
+  };
+
+  // Создание DOM - элемента карточки похожего объявления
+  var createPosterCard = function (similarPoster) {
+    var template = document.querySelector('#card').content.querySelector('.map__card');
+    var posterCard = template.cloneNode(true);
+
+    var fillPosterCard = function (tag, data) {
+      var elem = posterCard.querySelector(tag);
+      if (elem) {
+        if (!data) {
+          elem.style.display = 'none';
+        } else {
+          elem.textContent = data;
+        }
+      }
+    };
+
+    fillPosterCard('.popup__title', similarPoster.offer.title);
+
+    fillPosterCard('.popup__text--address', similarPoster.offer.address);
+
+    var priceField = posterCard.querySelector('.popup__text--price');
+    priceField.firstChild.nodeValue = similarPoster.offer.price + '₽';
+
+    var offerType = {
+      'flat': 'Квартира',
+      'bungalo': 'Бунгало',
+      'house': 'Дом',
+      'palace': 'Дворец'
+    };
+
+    fillPosterCard('.popup__type', offerType[similarPoster.offer.type]);
+    fillPosterCard('.popup__text--capacity', similarPoster.offer.rooms + ' комнаты для ' + similarPoster.offer.guests + ' гостей');
+    fillPosterCard('.popup__text--time', 'Заезд после ' + similarPoster.offer.checkin + ', выезд до ' + similarPoster.offer.checkout);
+
+    var featuresList = posterCard.querySelector('.popup__features');
+    if (similarPoster.offer.features.length === 0) {
+      featuresList.style.display = 'none';
+    } else {
+      for (var j = 0; j < featuresList.children.length; j++) {
+        featuresList.children[j].style.display = 'none';
+      }
+      for (var k = 0; k < similarPoster.offer.features.length; k++) {
+        var featureClass = '.popup__feature--' + similarPoster.offer.features[k];
+        featuresList.querySelector(featureClass).style.display = 'inline-block';
+      }
+    }
+
+    fillPosterCard('.popup__description', similarPoster.offer.description);
+
+    var photos = similarPoster.offer.photos;
+    var photosBlock = posterCard.querySelector('.popup__photos');
+
+    if (photos.length > 0) {
+      var templatePhoto = posterCard.querySelector('.popup__photo');
+
+      photosBlock.removeChild(templatePhoto);
+
+      for (var l = 0; l < photos.length; l++) {
+        var offerPhoto = templatePhoto.cloneNode(true);
+        offerPhoto.src = photos[l];
+        photosBlock.appendChild(offerPhoto);
+      }
+    } else {
+      photosBlock.style.display = 'none';
+    }
+
+    posterCard.querySelector('.popup__avatar').src = similarPoster.author.avatar;
+
+    return posterCard;
+  };
+
+  // Отрисовка карточки похожего объявления
+
+  var renderPosterCard = function (similarPoster) {
+    var mapCardsBlock = document.querySelector('.map');
+    var mapFilters = mapCardsBlock.querySelector('.map__filters-container');
+    var fragment = document.createDocumentFragment();
+    var posterCard = createPosterCard(similarPoster);
+
+    fragment.appendChild(posterCard);
+    mapCardsBlock.insertBefore(fragment, mapFilters);
   };
 
   window.date = {
