@@ -41,9 +41,11 @@
 
   var filterForm = document.querySelector('.map__filters');
   var posters = [];
-
+  var lastTimeout;
   var filterPosters = function () {
     var filteredPosters = posters.slice();
+
+    // Проверка по типу жилья
     var typeSelect = filterForm.querySelector('#housing-type');
 
     if (typeSelect.value !== 'any') {
@@ -51,15 +53,71 @@
         return poster.offer.type === typeSelect.value;
       });
     }
+
+    // Проверка по стоимости аренды
+    var priceSelect = filterForm.querySelector('#housing-price');
+
+    if (priceSelect.value !== 'any') {
+      filteredPosters = filteredPosters.filter(function (poster) {
+        if (priceSelect.value === 'middle') {
+          return poster.offer.price >= 10000 && poster.offer.price <= 50000;
+        } else if (priceSelect.value === 'low') {
+          return poster.offer.price < 10000;
+        } else if (priceSelect.value === 'high') {
+          return poster.offer.price > 50000;
+        }
+      });
+    }
+
+    // Проверка числа комнат
+    var roomsSelect = filterForm.querySelector('#housing-rooms');
+    if (roomsSelect.value !== 'any') {
+      filteredPosters = filteredPosters.filter(function (poster) {
+        return poster.offer.rooms === parseInt(roomsSelect.value, 10);
+      });
+    }
+
+    // Проверка числа гостей
+    var guestsSelect = filterForm.querySelector('#housing-guests');
+    if (guestsSelect.value !== 'any') {
+      filteredPosters = filteredPosters.filter(function (poster) {
+        return poster.offer.guests === parseInt(guestsSelect.value, 10);
+      });
+    }
+
+    // Проверка наличия удобств
+    var filterCheckboxes = filterForm.querySelectorAll('.map__checkbox');
+
+    for (var i = 0; i < filterCheckboxes.length; i++) {
+      if (filterCheckboxes[i].checked) {
+        filteredPosters = filteredPosters.filter(function (poster) {
+          return poster.offer.features.indexOf(filterCheckboxes[i].value) !== -1;
+        });
+      }
+    }
+
     filteredPosters = filteredPosters.slice(0, PINS_TOTAL);
     hidePosterCard();
-    addingPins(filteredPosters);
+
+
+    // Debounce
+    if (lastTimeout) {
+      window.clearTimeout(lastTimeout);
+    }
+    lastTimeout = window.setTimeout(function () {
+      addingPins(filteredPosters);
+    }, 500);
   };
 
-  var filterInputs = filterForm.querySelectorAll('select');
+  var filterInputs = filterForm.querySelectorAll('.map__filter');
+  var filterCheckboxes = filterForm.querySelectorAll('.map__checkbox');
 
   for (var i = 0; i < filterInputs.length; i++) {
     filterInputs[i].addEventListener('change', filterPosters);
+  }
+
+  for (var j = 0; j < filterCheckboxes.length; j++) {
+    filterCheckboxes[j].addEventListener('change', filterPosters);
   }
 
   var loadPosters = function (similarPosters) {
@@ -133,8 +191,8 @@
     if (similarPoster.offer.features.length === 0) {
       featuresList.style.display = 'none';
     } else {
-      for (var j = 0; j < featuresList.children.length; j++) {
-        featuresList.children[j].style.display = 'none';
+      for (var l = 0; l < featuresList.children.length; l++) {
+        featuresList.children[l].style.display = 'none';
       }
       for (var k = 0; k < similarPoster.offer.features.length; k++) {
         var featureClass = '.popup__feature--' + similarPoster.offer.features[k];
@@ -152,9 +210,9 @@
 
       photosBlock.removeChild(templatePhoto);
 
-      for (var l = 0; l < photos.length; l++) {
+      for (var m = 0; m < photos.length; m++) {
         var offerPhoto = templatePhoto.cloneNode(true);
-        offerPhoto.src = photos[l];
+        offerPhoto.src = photos[m];
         photosBlock.appendChild(offerPhoto);
       }
     } else {
