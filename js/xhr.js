@@ -53,7 +53,7 @@
     xhr.send(data);
   };
 
-  window.load = {
+  window.xhr = {
     load: load,
     upload: upload
   };

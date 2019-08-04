@@ -17,7 +17,7 @@
   var defaultPositionY = mainPin.style.top;
   var defaultPositionX = mainPin.style.left;
 
-  var resetMainPinPosition = function () {
+  var resetPosition = function () {
     mainPin.style.top = defaultPositionY;
     mainPin.style.left = defaultPositionX;
     setAddress();
@@ -29,12 +29,9 @@
 
     var mainPinPositionX = Math.floor(parseFloat(mainPin.style.left) + Math.round(MAIN_PIN_WIDTH / 2));
     var mainPinPositionY;
-    if (window.util.isPageActive) {
-      mainPinPositionY = parseFloat(mainPin.style.top) + PIN_HEIGHT;
-    } else {
-      mainPinPositionY = parseFloat(mainPin.style.top) + MAIN_PIN_WIDTH / 2;
-    }
-
+    var mainPinTop = parseFloat(mainPin.style.top);
+    mainPinPositionY = parseFloat(mainPin.style.top) + PIN_HEIGHT;
+    mainPinPositionY = mainPinTop + (window.util.isPageActive ? PIN_HEIGHT : (MAIN_PIN_WIDTH / 2));
     addressInput.value = mainPinPositionX + ', ' + mainPinPositionY;
   };
 
@@ -50,7 +47,7 @@
 
       window.util.isPageActive = true;
 
-      window.date.getSimilarPosters();
+      window.date.getList();
       setAddress();
 
       for (var j = 0; j < filterForm.children.length; j++) {
@@ -120,6 +117,6 @@
   });
 
   window.mainPin = {
-    resetMainPinPosition: resetMainPinPosition
+    resetPosition: resetPosition
   };
 })();

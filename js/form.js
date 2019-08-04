@@ -7,7 +7,7 @@
 
   window.util.disableForm();
 
-  // связь полей формы Тип жилья и Цена за ночь
+  // Связь полей формы Тип жилья и Цена за ночь
   var offerTypeSelect = form.querySelector('#type');
   var priceInput = form.querySelector('#price');
 
@@ -25,7 +25,7 @@
     }
   });
 
-  // связь полей формы Время заезда и выезда
+  // Связь полей формы Время заезда и выезда
   var timeInInput = form.querySelector('#timein');
   var timeOutInput = form.querySelector('#timeout');
 
@@ -59,19 +59,87 @@
       guestsSelect.querySelector('option[value="0"]').disabled = false;
     }
 
-    if (roomsSelect.value !== '100') {
-      guestsSelect.value = '1';
-    } else {
-      guestsSelect.value = '0';
-    }
+    guestsSelect.value = roomsSelect.value !== '100' ? '1' : '0';
   });
 
-  // сбор дефолтных значений полей формы
+  // Сбор значений полей формы
   var fields = form.querySelectorAll('input, textarea, select');
   var defaultValues = [];
   for (var i = 0; i < fields.length; i++) {
     defaultValues[i] = fields[i].value;
   }
+
+  var previewAvatar = form.querySelector('.ad-form-header__preview img');
+  var defaultAvatar = previewAvatar.src;
+
+  // Загрузка изображений
+  var FILE_TYPES = ['gif', 'jpg', 'jpeg', 'png'];
+  var avatarChooser = form.querySelector('#avatar');
+  var photosBlock = form.querySelector('.ad-form__photo-container');
+
+  var showAvatarCallback = function (file) {
+    var reader = new FileReader();
+
+    reader.addEventListener('load', function () {
+      previewAvatar.src = reader.result;
+    });
+
+    reader.readAsDataURL(file);
+  };
+
+  var showPhotosCallback = function (file) {
+    var reader = new FileReader();
+
+    reader.addEventListener('load', function () {
+
+      var previewPhoto = previewAvatar.cloneNode(true);
+      var previewPhotoContainerCopy = previewPhotosContainer.cloneNode(true);
+      previewPhotosContainer.style.display = 'none';
+      previewPhotoContainerCopy.style.display = 'block';
+      previewPhoto.src = reader.result;
+      previewPhoto.alt = 'фотография объекта';
+      previewPhoto.width = '70';
+      previewPhoto.height = '70';
+      previewPhoto.style.objectFit = 'cover';
+      previewPhotoContainerCopy.appendChild(previewPhoto);
+      photosBlock.appendChild(previewPhotoContainerCopy);
+    });
+
+    reader.readAsDataURL(file);
+  };
+
+  var showPreview = function (fileChooser, callback) {
+    fileChooser.addEventListener('change', function () {
+      resetPhotos();
+      for (var j = 0; j < fileChooser.files.length; j++) {
+        var file = fileChooser.files[j];
+        var fileName = file.name.toLowerCase();
+        var matches = FILE_TYPES.some(function (it) {
+          return fileName.endsWith(it);
+        });
+
+        if (matches) {
+          callback(file);
+        }
+      }
+    });
+  };
+
+  showPreview(avatarChooser, showAvatarCallback);
+
+  var photoChooser = form.querySelector('#images');
+  var previewPhotosContainer = form.querySelector('.ad-form__photo');
+
+  showPreview(photoChooser, showPhotosCallback);
+
+  // Очистка загруженных фотографий жилья
+  var resetPhotos = function () {
+    var photoPreviews = photosBlock.querySelectorAll('.ad-form__photo');
+    for (var l = 1; l < photoPreviews.length; l++) {
+      photoPreviews[l].remove();
+    }
+    photoPreviews[0].style.display = 'block';
+  };
 
   // Отправка формы
   var onSubmitSuccess = function () {
@@ -107,24 +175,24 @@
         errorPopup.remove();
       }
     };
-    var removeErrorPopup = function () {
+    var onErrorClick = function () {
       errorPopup.remove();
       document.removeEventListener('keydown', onPopupEscPress);
     };
 
 
-    errorPopup.addEventListener('click', removeErrorPopup);
+    errorPopup.addEventListener('click', onErrorClick);
     document.addEventListener('keydown', onPopupEscPress);
-    errorPopup.querySelector('.error__button').addEventListener('click', removeErrorPopup);
+    errorPopup.querySelector('.error__button').addEventListener('click', onErrorClick);
   };
 
   form.onsubmit = function (evt) {
     evt.preventDefault();
-    window.load.upload(new FormData(form), onSubmitSuccess, onSubmitError);
+    window.xhr.upload(new FormData(form), onSubmitSuccess, onSubmitError);
   };
 
   // Очистка полей формы
-  var resetForm = function () {
+  var reset = function () {
     for (var j = 0; j < fields.length; j++) {
       fields[j].value = defaultValues[j];
     }
@@ -138,12 +206,16 @@
     elementIndex = window.util.OFFER_TYPES.indexOf(offerTypeSelect.value);
     priceInput.min = MIN_PRICES_PER_NIGHT[elementIndex];
     priceInput.placeholder = MIN_PRICES_PER_NIGHT[elementIndex];
+
+    previewAvatar.src = defaultAvatar;
+
+    resetPhotos();
   };
 
   var formReset = form.querySelector('.ad-form__reset');
   formReset.addEventListener('click', window.util.desactivatePage);
 
   window.form = {
-    resetForm: resetForm
+    reset: reset
   };
 })();
