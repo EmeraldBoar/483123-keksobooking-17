@@ -252,7 +252,7 @@
         pins[k].classList.remove('map__pin--active');
       }
 
-      this.classList.add('map__pin--active');
+      pin.classList.add('map__pin--active');
       window.util.hidePosterCard();
       renderPosterCard(poster);
     });
