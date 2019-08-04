@@ -1,10 +1,19 @@
-/* eslint-disable no-invalid-this */
 'use strict';
 
 (function () {
 
   var PINS_TOTAL = 5;
+  var DEBOUNCE_INTERVAL = 500;
   var map = document.querySelector('.map');
+  var LOW_PRICE = 10000;
+  var HIGH_PRICE = 50000;
+  var LOAD_URL = 'https://js.dump.academy/keksobooking/data';
+  var OfferType = {
+    'FLAT': 'Квартира',
+    'BUNGALO': 'Бунгало',
+    'HOUSE': 'Дом',
+    'PALACE': 'Дворец'
+  };
 
 
   // Отрисовка указателей
@@ -23,11 +32,8 @@
   var addingPins = function (similarPosters) {
     var similarListElement = map.querySelector('.map__pins');
     var fragment = document.createDocumentFragment();
-    var renderedPins = similarListElement.querySelectorAll('.map__pin:not(.map__pin--main)');
 
-    for (var i = 0; i < renderedPins.length; i++) {
-      similarListElement.removeChild(renderedPins[i]);
-    }
+    window.util.removePins();
 
     for (var j = 0; j < similarPosters.length; j += 1) {
       var similarPoster = similarPosters[j];
@@ -60,11 +66,13 @@
     if (priceSelect.value !== 'any') {
       filteredPosters = filteredPosters.filter(function (poster) {
         if (priceSelect.value === 'middle') {
-          return poster.offer.price >= 10000 && poster.offer.price <= 50000;
+          return poster.offer.price >= LOW_PRICE && poster.offer.price <= HIGH_PRICE;
         } else if (priceSelect.value === 'low') {
-          return poster.offer.price < 10000;
+          return poster.offer.price < LOW_PRICE;
         } else if (priceSelect.value === 'high') {
-          return poster.offer.price > 50000;
+          return poster.offer.price > HIGH_PRICE;
+        } else {
+          return false;
         }
       });
     }
@@ -97,7 +105,7 @@
     }
 
     filteredPosters = filteredPosters.slice(0, PINS_TOTAL);
-    hidePosterCard();
+    window.util.hidePosterCard();
 
 
     // Debounce
@@ -106,7 +114,7 @@
     }
     lastTimeout = window.setTimeout(function () {
       addingPins(filteredPosters);
-    }, 500);
+    }, DEBOUNCE_INTERVAL);
   };
 
   var filterInputs = filterForm.querySelectorAll('.map__filter');
@@ -119,6 +127,8 @@
   for (var j = 0; j < filterCheckboxes.length; j++) {
     filterCheckboxes[j].addEventListener('change', filterPosters);
   }
+
+  window.util.disableFilters();
 
   var loadPosters = function (similarPosters) {
     posters = similarPosters;
@@ -144,7 +154,7 @@
       });
     };
 
-    window.load('https://js.dump.academy/keksobooking/data', loadPosters, onError);
+    window.load.load(LOAD_URL, loadPosters, onError);
   };
 
   // Создание DOM - элемента карточки похожего объявления
@@ -170,14 +180,7 @@
     var priceField = posterCard.querySelector('.popup__text--price');
     priceField.firstChild.nodeValue = similarPoster.offer.price + '₽';
 
-    var offerType = {
-      'flat': 'Квартира',
-      'bungalo': 'Бунгало',
-      'house': 'Дом',
-      'palace': 'Дворец'
-    };
-
-    fillPosterCard('.popup__type', offerType[similarPoster.offer.type]);
+    fillPosterCard('.popup__type', OfferType[similarPoster.offer.type]);
 
     if (!similarPoster.offer.rooms || !similarPoster.offer.guests) {
       posterCard.querySelector('.popup__text--capacity').style.display = 'none';
@@ -235,9 +238,9 @@
     map.insertBefore(fragment, mapFilters);
 
     var cardClose = document.querySelector('.map__card .popup__close');
-    cardClose.addEventListener('click', hidePosterCard);
+    cardClose.addEventListener('click', window.util.hidePosterCard);
 
-    document.addEventListener('keydown', onPopupEscPress);
+    document.addEventListener('keydown', window.util.onPopupEscPress);
   };
 
   // При клике на пин показывает карточку объявления
@@ -250,26 +253,9 @@
       }
 
       this.classList.add('map__pin--active');
-      hidePosterCard();
+      window.util.hidePosterCard();
       renderPosterCard(poster);
     });
-  };
-
-  // Удаление карточки
-  var hidePosterCard = function () {
-    var posterCard = map.querySelector('.map__card');
-
-    if (posterCard) {
-      map.removeChild(posterCard);
-    }
-
-    document.removeEventListener('keydown', onPopupEscPress);
-  };
-
-  var onPopupEscPress = function (evt) {
-    if (evt.keyCode === 27) {
-      hidePosterCard();
-    }
   };
 
   window.date = {

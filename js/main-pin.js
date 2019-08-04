@@ -4,69 +4,66 @@
 
   var PIN_HEIGHT = 70;
   var MAIN_PIN_WIDTH = 62;
-  var MAIN_PIN_HEIGHT = 62;
-
 
   // Карта
   var map = document.querySelector('.map');
   var mapWidth = map.clientWidth;
-  var mapMainPin = document.querySelector('.map__pin--main');
-  var isPageActive = false;
+  var mainPin = document.querySelector('.map__pin--main');
 
   // Форма
-  var adForm = document.querySelector('.ad-form');
-  var fieldsetForm = document.querySelectorAll('fieldset');
-  var selectForm = document.querySelectorAll('select');
+  var form = document.querySelector('.ad-form');
   var filterForm = document.querySelector('.map__filters');
-  var address = adForm.querySelector('#address');
+
+  var defaultPositionY = mainPin.style.top;
+  var defaultPositionX = mainPin.style.left;
+
+  var resetMainPinPosition = function () {
+    mainPin.style.top = defaultPositionY;
+    mainPin.style.left = defaultPositionX;
+    setAddress();
+  };
 
 
-  var formDisabled = function (collection) {
-    for (var i = 0; i < collection.length; i += 1) {
-      collection[i].setAttribute('disabled', 'disabled');
+  var setAddress = function () {
+    var addressInput = form.querySelector('#address');
+
+    var mainPinPositionX = Math.floor(parseFloat(mainPin.style.left) + Math.round(MAIN_PIN_WIDTH / 2));
+    var mainPinPositionY;
+    if (window.util.isPageActive) {
+      mainPinPositionY = parseFloat(mainPin.style.top) + PIN_HEIGHT;
+    } else {
+      mainPinPositionY = parseFloat(mainPin.style.top) + MAIN_PIN_WIDTH / 2;
     }
+
+    addressInput.value = mainPinPositionX + ', ' + mainPinPositionY;
   };
-
-  var formEnable = function (collection) {
-    for (var i = 0; i < collection.length; i += 1) {
-      collection[i].removeAttribute('disabled');
-    }
-  };
-
-  formDisabled(fieldsetForm);
-  formDisabled(selectForm);
-
-
-  // Функция вносит координаты указателя в input #address
-  var getRenderAddress = function () {
-    address.value = (window.util.getParseCoordinates(mapMainPin.style.left) + MAIN_PIN_WIDTH / 2) + ',' + ' ' + (window.util.getParseCoordinates(mapMainPin.style.top) + MAIN_PIN_HEIGHT + 22);
-  };
-
-
-  // Значения поля адрес при неактивной странице
-  getRenderAddress();
-
 
   // Функция активации страницы
   var activatePage = function () {
-    if (!isPageActive) {
+    if (!window.util.isPageActive) {
       map.classList.remove('map--faded');
-      adForm.classList.remove('ad-form--disabled');
-      formEnable(fieldsetForm);
-      formEnable(selectForm);
-      isPageActive = true;
+      form.classList.remove('ad-form--disabled');
+
+      for (var i = 0; i < form.children.length; i++) {
+        form.children[i].disabled = false;
+      }
+
+      window.util.isPageActive = true;
+
       window.date.getSimilarPosters();
-      getRenderAddress();
+      setAddress();
 
       for (var j = 0; j < filterForm.children.length; j++) {
-        filterForm.children[j].removeAttribute('disabled');
+        filterForm.children[j].disabled = false;
       }
     }
   };
 
+  setAddress();
+
 
   // Перемещение главной метки по карте
-  mapMainPin.addEventListener('mousedown', function (evt) {
+  mainPin.addEventListener('mousedown', function (evt) {
     activatePage();
 
     var startCoords = {
@@ -87,26 +84,27 @@
         y: moveEvt.clientY
       };
 
-      var mapMainPinY = (mapMainPin.offsetTop - shift.y);
-      var mapMainPinX = (mapMainPin.offsetLeft - shift.x);
+      var mainPinY = (mainPin.offsetTop - shift.y);
+      var mainPinX = (mainPin.offsetLeft - shift.x);
 
-      if (mapMainPinY < window.util.MAP_PADDING - PIN_HEIGHT) {
-        mapMainPinY = window.util.MAP_PADDING - PIN_HEIGHT;
-      } else if (mapMainPinY > window.util.MAP_HEIGHT) {
-        mapMainPinY = window.util.MAP_HEIGHT;
+      if (mainPinY < window.util.MAP_PADDING - PIN_HEIGHT) {
+        mainPinY = window.util.MAP_PADDING - PIN_HEIGHT;
+      } else if (mainPinY > window.util.MAP_HEIGHT) {
+        mainPinY = window.util.MAP_HEIGHT;
       }
 
-      if (mapMainPinX < -MAIN_PIN_WIDTH / 2) {
-        mapMainPinX = -MAIN_PIN_WIDTH / 2;
-      } else if (mapMainPinX > (mapWidth - MAIN_PIN_WIDTH / 2)) {
-        mapMainPinX = mapWidth - MAIN_PIN_WIDTH / 2;
+      if (mainPinX < -MAIN_PIN_WIDTH / 2) {
+        mainPinX = -MAIN_PIN_WIDTH / 2;
+      } else if (mainPinX > (mapWidth - MAIN_PIN_WIDTH / 2)) {
+        mainPinX = mapWidth - MAIN_PIN_WIDTH / 2;
       }
 
-      mapMainPin.style.top = mapMainPinY + 'px';
-      mapMainPin.style.left = mapMainPinX + 'px';
+      mainPin.style.top = mainPinY + 'px';
+      mainPin.style.left = mainPinX + 'px';
 
-      getRenderAddress();
+      setAddress();
     };
+
 
     var onMouseUp = function (upEvt) {
       upEvt.preventDefault();
@@ -114,10 +112,14 @@
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
 
-      getRenderAddress();
+      setAddress();
     };
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   });
+
+  window.mainPin = {
+    resetMainPinPosition: resetMainPinPosition
+  };
 })();
