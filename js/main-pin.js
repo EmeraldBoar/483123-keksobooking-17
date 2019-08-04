@@ -30,7 +30,6 @@
     var mainPinPositionX = Math.floor(parseFloat(mainPin.style.left) + Math.round(MAIN_PIN_WIDTH / 2));
     var mainPinPositionY;
     var mainPinTop = parseFloat(mainPin.style.top);
-    mainPinPositionY = parseFloat(mainPin.style.top) + PIN_HEIGHT;
     mainPinPositionY = mainPinTop + (window.util.isPageActive ? PIN_HEIGHT : (MAIN_PIN_WIDTH / 2));
     addressInput.value = mainPinPositionX + ', ' + mainPinPositionY;
   };

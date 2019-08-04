@@ -160,7 +160,7 @@
       document.removeEventListener('keydown', onPopupEscPress);
     });
     document.addEventListener('keydown', onPopupEscPress);
-    window.util.desactivatePage();
+    window.util.disactivatePage();
   };
 
   var onSubmitError = function () {
@@ -213,7 +213,7 @@
   };
 
   var formReset = form.querySelector('.ad-form__reset');
-  formReset.addEventListener('click', window.util.desactivatePage);
+  formReset.addEventListener('click', window.util.disactivatePage);
 
   window.form = {
     reset: reset

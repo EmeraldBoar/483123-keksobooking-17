@@ -54,7 +54,7 @@
   };
 
   // Приводит страницу в изначальное неактивное состояние
-  var desactivatePage = function () {
+  var disactivatePage = function () {
     map.classList.add('map--faded');
     form.classList.add('ad-form--disabled');
     window.util.isPageActive = false;
@@ -70,7 +70,7 @@
     MAP_HEIGHT: MAP_HEIGHT,
     ESC_CODE: ESC_CODE,
     MAP_PADDING: MAP_PADDING,
-    desactivatePage: desactivatePage,
+    disactivatePage: disactivatePage,
     removePins: removePins,
     disableFilters: disableFilters,
     isPageActive: isPageActive,
