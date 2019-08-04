@@ -61,8 +61,8 @@
     removePins();
     hidePosterCard();
     disableForm();
-    window.form.resetForm();
-    window.mainPin.resetMainPinPosition();
+    window.form.reset();
+    window.mainPin.resetPosition();
   };
 
   window.util = {
